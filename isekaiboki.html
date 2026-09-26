@@ -1,0 +1,849 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>異世界転生屋台 // スキル【複式簿記】の冒険帳</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Yuji+Boku&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+:root {
+ --primary: #d97706;
+ --primary-hover: #f59e0b;
+ --bg-body: #1c1917;
+ --card-bg: #120f0c;
+ --container-bg: rgba(38, 33, 27, 0.96);
+ --text-main: #fef3c7;
+ --text-muted: #a8a29e;
+ --border: #78350f;
+ --debit-border: #3b82f6;
+ --credit-border: #f43f5e;
+ --correct-bg: #064e3b;
+ --correct-text: #a7f3d0;
+ --wrong-bg: #4c0519;
+ --wrong-text: #fecdd3;
+ --bg-mid: #292524;
+ --font-main: 'Zen Kaku Gothic New', -apple-system, "Hiragino Kaku Gothic ProN", sans-serif;
+ --font-title: 'Cinzel', 'Yuji Boku', serif;
+ --input-bg: #1c1408;
+ --btn-bg: #3a2c1e;
+ --btn-bg-hover: #4a3826;
+ --panel-bg: rgba(18,15,12,0.6);
+ --on-primary: #1c0f02;
+ --pa12: rgba(217, 119, 6, 0.12);
+ --pa15: rgba(217,119,6,0.15);
+ --pa18: rgba(217, 119, 6, 0.18);
+ --pa20: rgba(217,119,6,0.2);
+ --pa35: rgba(217,119,6,0.35);
+ --pa40: rgba(217,119,6,0.4);
+ --pa50: rgba(217,119,6,0.5);
+ --pha15: rgba(245, 158, 11, 0.15);
+ --pha18: rgba(245, 158, 11, 0.18);
+ --pha50: rgba(245,158,11,0.5);
+}
+body {
+ margin: 0;
+ min-height: 100vh;
+ font-family: var(--font-main);
+ color: var(--text-main);
+ background-color: var(--bg-body);
+ background-image:
+ radial-gradient(circle at 10% 20%, var(--pha15) 0 3px, transparent 4px),
+ radial-gradient(circle at 90% 70%, var(--pa12) 0 4px, transparent 5px),
+ linear-gradient(180deg, var(--bg-body) 0%, var(--bg-mid) 40%, var(--bg-body) 100%);
+ padding: 16px;
+ overflow-x: hidden;
+}
+.container {
+ width: 100%;
+ max-width: 720px;
+ margin: 0 auto;
+ background: var(--container-bg);
+ border: 1.5px solid var(--border);
+ border-radius: 12px;
+ padding: 22px;
+ box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7), 0 0 20px var(--pa20);
+ position: relative;
+}
+.header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 14px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.logo-area { display: flex; align-items: center; gap: 12px; }
+.logo-icon { font-size: 2rem; line-height: 1; filter: drop-shadow(0 0 6px var(--pa50)); }
+.logo-title { margin: 0; font-size: 1.1rem; color: var(--primary); font-weight: 800; letter-spacing: 0.03em; font-family: var(--font-title); }
+.status-badge { background: var(--pa18); border: 1px solid var(--primary); color: var(--primary); padding: 4px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; letter-spacing: 0.03em; }
+.status-badge.review { background: rgba(59, 130, 246, 0.15); border-color: var(--debit-border); color: #93c5fd; }
+
+.stage-tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 16px; }
+@media (max-width: 480px) { .stage-tabs { grid-template-columns: repeat(3, 1fr); } }
+.stage-btn {
+ padding: 10px 4px; border: 1px solid var(--border); border-radius: 6px; background: var(--panel-bg);
+ font-size: 0.7rem; font-weight: bold; color: var(--text-muted); cursor: pointer; text-align: center; line-height: 1.25;
+ transition: all 0.2s ease; font-family: inherit;
+}
+.stage-btn.active { background: var(--primary); color: var(--on-primary); border-color: var(--primary); box-shadow: 0 0 10px var(--pa40); }
+
+.quest-progress { margin-bottom: 16px; padding: 10px 14px; background: var(--panel-bg); border-radius: 6px; border: 1px solid var(--border); }
+.progress-track { height: 6px; width: 100%; background: var(--btn-bg); border-radius: 999px; overflow: hidden; margin-top: 6px; }
+.progress-fill { width: 0%; height: 100%; background: var(--primary); box-shadow: 0 0 8px var(--primary); transition: width 0.3s ease; }
+
+.card { background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid var(--primary); border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 4px 15px rgba(0,0,0,0.5); position: relative; }
+.card::before { content: var(--card-watermark, "ISEKAI GUILD // BOOKKEEPING"); position: absolute; top: 6px; right: 12px; font-size: 0.6rem; letter-spacing: 1.5px; font-family: monospace; color: var(--pha18); font-weight: bold; pointer-events: none; }
+.question-label { display: inline-block; background: var(--pa20); border: 1px solid var(--primary); color: var(--primary); padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: bold; margin-bottom: 10px; letter-spacing: 0.03em; }
+.story-text { margin: 0; font-size: 0.95rem; line-height: 1.75; color: var(--text-main); }
+
+.split-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+@media(max-width: 560px) { .split-container { grid-template-columns: 1fr; } }
+.side-column { padding: 12px; background: var(--panel-bg); border: 1.5px solid var(--debit-border); border-radius: 8px; }
+.side-column.credit { border-color: var(--credit-border); }
+.side-title { text-align: center; margin-bottom: 10px; font-weight: bold; font-size: 0.85rem; letter-spacing: 0.03em; color: var(--debit-border); }
+.side-column.credit .side-title { color: var(--credit-border); }
+.entry-row { display: flex; gap: 6px; margin-bottom: 8px; }
+.entry-row input { padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.88rem; background: var(--input-bg); color: var(--text-main); font-family: inherit; width: 100%; }
+.entry-row input[type="text"] { flex: 1.3; }
+.entry-row input[type="number"] { flex: 1; }
+.entry-row input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 6px var(--pa40); }
+.btn-remove { background: rgba(244, 63, 94, 0.15); border: 1px solid var(--credit-border); border-radius: 4px; color: #fecdd3; cursor: pointer; font-weight: bold; }
+.btn-add { width: 100%; padding: 7px; background: var(--input-bg); border: 1px dashed var(--border); color: var(--text-muted); border-radius: 4px; font-size: 0.8rem; cursor: pointer; font-weight: bold; font-family: inherit; transition: all 0.15s; }
+.btn-add:hover { border-color: var(--primary); color: var(--primary); }
+
+.btn-submit { width: 100%; padding: 14px; background: var(--primary); color: var(--on-primary); border: none; border-radius: 6px; font-size: 1.05rem; font-weight: 800; letter-spacing: 0.02em; cursor: pointer; box-shadow: 0 0 15px var(--pa35); transition: all 0.2s ease; font-family: var(--font-title); }
+.btn-submit:hover { background: var(--primary-hover); box-shadow: 0 0 20px var(--pha50); }
+
+.result-box { display: none; margin-top: 14px; padding: 14px; border-radius: 6px; font-size: 0.9rem; line-height: 1.7; }
+.result-box.correct { background: var(--correct-bg); border: 1px solid #10b981; color: var(--correct-text); box-shadow: 0 0 10px rgba(16,185,129,0.2); }
+.result-box.wrong { background: var(--wrong-bg); border: 1px solid var(--credit-border); color: var(--wrong-text); box-shadow: 0 0 10px rgba(244,63,94,0.2); }
+
+.nav-buttons { display: flex; gap: 10px; margin-top: 14px; }
+.nav-btn { flex: 1; padding: 10px; background: var(--btn-bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 6px; font-weight: bold; cursor: pointer; font-family: inherit; transition: background 0.15s; }
+.nav-btn:hover { background: var(--btn-bg-hover); }
+
+.clear-card { display: none; text-align: center; padding: 28px 16px; }
+.btn-review, .btn-restart { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 8px; font-family: inherit; }
+.btn-review { background: var(--primary); color: var(--on-primary); font-weight: 800; }
+.btn-restart { background: var(--btn-bg); color: var(--text-main); }
+
+details { margin-top: 24px; border-top: 1px dashed var(--border); padding-top: 14px; }
+summary { cursor: pointer; font-size: 0.8rem; color: var(--text-muted); font-weight: bold; }
+textarea { width: 100%; height: 90px; margin-top: 10px; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); color: var(--primary); font-family: monospace; font-size: 0.8rem; }
+.load-btn { width: 100%; margin-top: 8px; padding: 10px; background: var(--btn-bg); border: 1px solid var(--primary); color: var(--primary); border-radius: 6px; font-weight: bold; cursor: pointer; font-family: inherit; }
+.load-btn:hover { background: var(--pa15); }
+.reset-link { display: block; margin-top: 18px; text-align: center; font-size: 0.75rem; color: var(--text-muted); cursor: pointer; text-decoration: underline; }
+
+.shake-animation { animation: dmgShake 0.45s cubic-bezier(.36,.07,.19,.97) both; }
+@keyframes dmgShake {
+ 10%, 90% { transform: translate3d(-4px, 0, 0); } 20%, 80% { transform: translate3d(6px, 0, 0); }
+ 30%, 50%, 70% { transform: translate3d(-8px, 0, 0); } 40%, 60% { transform: translate3d(8px, 0, 0); }
+}
+.rising-item { position: fixed; bottom: -30px; z-index: 9999; pointer-events: none; user-select: none; opacity: 0; animation: riseMagic ease-out forwards; }
+@keyframes riseMagic {
+ 0% { transform: translateY(0) scale(0.4) rotate(0deg); opacity: 0; } 15% { opacity: 0.95; }
+ 50% { transform: translateY(-50vh) translateX(var(--drift, 20px)) scale(1.1) rotate(180deg); opacity: 0.9; }
+ 85% { opacity: 0.7; } 100% { transform: translateY(-110vh) translateX(calc(var(--drift, 20px) * -1)) scale(1.3) rotate(360deg); opacity: 0; }
+}
+
+.tab-sub { display: block; }
+.tab-sub.clip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stage-btn { min-width: 0; }
+.import-help { margin: 10px 0 0; font-size: 0.75rem; line-height: 1.6; color: var(--text-muted); }
+.reset-theme-btn { display: block; width: 100%; margin-top: 8px; padding: 6px; background: none; border: none; color: var(--text-muted); font-size: 0.75rem; text-decoration: underline; cursor: pointer; font-family: inherit; }
+@supports (background: color-mix(in srgb, red 50%, transparent)) {
+ :root.themed {
+  --pa12: color-mix(in srgb, var(--primary) 12%, transparent);
+  --pa15: color-mix(in srgb, var(--primary) 15%, transparent);
+  --pa18: color-mix(in srgb, var(--primary) 18%, transparent);
+  --pa20: color-mix(in srgb, var(--primary) 20%, transparent);
+  --pa35: color-mix(in srgb, var(--primary) 35%, transparent);
+  --pa40: color-mix(in srgb, var(--primary) 40%, transparent);
+  --pa50: color-mix(in srgb, var(--primary) 50%, transparent);
+  --pha15: color-mix(in srgb, var(--primary-hover) 15%, transparent);
+  --pha18: color-mix(in srgb, var(--primary-hover) 18%, transparent);
+  --pha50: color-mix(in srgb, var(--primary-hover) 50%, transparent);
+  --panel-bg: color-mix(in srgb, var(--card-bg) 60%, transparent);
+  --input-bg: color-mix(in srgb, var(--card-bg) 96%, var(--text-main));
+  --btn-bg: color-mix(in srgb, var(--bg-body) 88%, var(--text-main));
+  --btn-bg-hover: color-mix(in srgb, var(--bg-body) 82%, var(--text-main));
+  --bg-mid: color-mix(in srgb, var(--bg-body) 94%, var(--text-main));
+  --container-bg: color-mix(in srgb, var(--bg-body) 95%, var(--text-main));
+ }
+}
+</style>
+
+
+<div class="container" id="mainContainer">
+ <div class="header">
+ <div class="logo-area">
+ <div class="logo-icon" id="app-logo">⛺</div>
+ <div>
+ <h1 class="logo-title" id="app-title">異世界転生屋台 // 冒険帳</h1>
+ <div style="font-size:0.7rem; color:var(--text-muted);" id="sub-title">〜 スキル【複式簿記】で成り上がる 〜</div>
+ </div>
+ </div>
+ <span class="status-badge" id="status-tag">商談中</span>
+ </div>
+
+ <div class="stage-tabs">
+ <button type="button" class="stage-btn active" id="tab-0" onclick="switchStage(0)">STAGE 1<span class="tab-sub">屋台開業</span></button>
+ <button type="button" class="stage-btn" id="tab-1" onclick="switchStage(1)">STAGE 2<span class="tab-sub">魔導具導入</span></button>
+ <button type="button" class="stage-btn" id="tab-2" onclick="switchStage(2)">STAGE 3<span class="tab-sub">販売と回収</span></button>
+ <button type="button" class="stage-btn" id="tab-3" onclick="switchStage(3)">STAGE 4<span class="tab-sub">資金運用</span></button>
+ <button type="button" class="stage-btn" id="tab-4" onclick="switchStage(4)">STAGE 5<span class="tab-sub">商会設立</span></button>
+ </div>
+
+ <div class="quest-progress">
+ <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:bold;">
+ <span id="stage-badge-text" style="color:var(--primary);">STAGE 1</span>
+ <span id="progress-text">取引 // 1</span>
+ </div>
+ <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+ </div>
+
+ <div id="quiz-area">
+ <div class="card">
+ <div class="question-label" id="q-number">帳簿 // 01</div>
+ <p class="story-text" id="story-display">記録を確認しています...</p>
+ </div>
+
+ <div class="split-container">
+ <div class="side-column">
+ <div class="side-title">借方 (DEBIT)</div>
+ <div id="debit-rows"></div>
+ <button type="button" class="btn-add" onclick="addRow('debit')">＋ 行を追加</button>
+ </div>
+ <div class="side-column credit">
+ <div class="side-title">貸方 (CREDIT)</div>
+ <div id="credit-rows"></div>
+ <button type="button" class="btn-add" onclick="addRow('credit')">＋ 行を追加</button>
+ </div>
+ </div>
+
+ <button type="button" class="btn-submit" id="submit-btn" onclick="checkAnswer()">⚖️ 仕訳を帳簿に刻む！</button>
+ <div id="result-display" class="result-box"></div>
+
+ <div class="nav-buttons">
+ <button type="button" class="nav-btn" onclick="prevQuestion()">◀ 前の商談へ</button>
+ <button type="button" class="nav-btn" id="next-btn" onclick="nextQuestion()">次の商談へ ▶</button>
+ </div>
+ </div>
+
+ <div id="clear-area" class="clear-card">
+ <h2 id="clear-heading" style="color:var(--primary); font-size:1.4rem; margin-top:0; font-family:var(--font-title);">この章、大成功！</h2>
+ <div id="complete-badge-area"></div>
+ <p id="score-text" style="line-height:1.6; color:var(--text-muted);"></p>
+ <div id="review-btn-area"></div>
+ <button type="button" class="btn-restart" onclick="startFreshStage()">この章を最初からやり直す</button>
+ </div>
+
+ <details>
+ <summary>📥 追加の商談記録を取り込む (JSON)</summary>
+ <p class="import-help">AIが作ったJSONを貼り付けてください。テーマ設定、5ステージ分の問題、今開いている章だけの問題のどれでも取り込めます。テーマと問題が続けて入っていても、そのまま貼れます。</p>
+ <textarea id="json-input" placeholder="ここにJSONを貼り付け（テーマ設定 / 5ステージ分の問題 / 現在の章の問題）"></textarea>
+ <button type="button" class="load-btn" onclick="loadCustomData()">取り込む</button>
+ <button type="button" class="reset-theme-btn" onclick="resetTheme()">テーマだけ初期値に戻す</button>
+ </details>
+
+ <span class="reset-link" onclick="forceReset()">※ 帳簿を初期化する（最初からやり直す）</span>
+</div>
+
+<div id="confirm-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10000; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#120f0c; color:#fef3c7; border:1px solid #d97706; border-radius:10px; padding:20px; max-width:320px; width:100%; text-align:center; font-family:inherit;">
+    <p id="confirm-message" style="white-space:pre-line; font-size:0.88rem; line-height:1.7; margin:0 0 16px; text-align:left;"></p>
+    <div style="display:flex; gap:10px;">
+      <button type="button" id="confirm-cancel-btn" style="flex:1; padding:10px; border:none; border-radius:6px; background:#3a2c1e; color:#fef3c7; cursor:pointer; font-weight:bold; font-family:inherit;">キャンセル</button>
+      <button type="button" id="confirm-ok-btn" style="flex:1; padding:10px; border:none; border-radius:6px; background:#d97706; color:#1c0f02; font-weight:bold; cursor:pointer; font-family:inherit;">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>document.documentElement.lang = "ja";</script>
+<script>
+function showModal(message, opts) {
+  opts = opts || {};
+  const overlay = document.getElementById("confirm-overlay");
+  document.getElementById("confirm-message").textContent = message;
+  const okBtn = document.getElementById("confirm-ok-btn");
+  const cancelBtn = document.getElementById("confirm-cancel-btn");
+  cancelBtn.style.display = opts.showCancel ? "inline-block" : "none";
+  overlay.style.display = "flex";
+  const cleanup = () => { overlay.style.display = "none"; okBtn.onclick = null; cancelBtn.onclick = null; };
+  okBtn.onclick = () => { cleanup(); if (opts.onOk) opts.onOk(); };
+  cancelBtn.onclick = () => { cleanup(); if (opts.onCancel) opts.onCancel(); };
+}
+function customConfirm(message, onConfirm) { showModal(message, { showCancel: true, onOk: onConfirm }); }
+function customAlert(message) { showModal(message, { showCancel: false, onOk: null }); }
+</script>
+<script>
+const RISING_EFFECT_SYMBOLS = ["💰", "🪙", "✨", "📜", "⭐", "🍺", "🧪"];
+
+const STAGES = [
+ { title: "Stage 1：路地裏の屋台開業 〜元手と拠点の確保〜", questions: [
+ { "story": "異世界に転生した主人公は、手持ちの金貨600,000円を元入れしてスライムゼリーの屋台を開業し、商売用の手許現金とした。（現金）（資本金）", "debit": [{"account":"現金","amount":600000}], "credit": [{"account":"資本金","amount":600000}], "explanation": "事業用の元入れにより、資産（Asset）である現金が増加したため借方に記入し、純資産（Net Assets）である資本金の増加を貸方に記帳します。" },
+ { "story": "冒険者ギルド前の出店スペースを確保するため、広場使用料（当月分家賃）50,000円を現金で支払った。（支払家賃）（現金）", "debit": [{"account":"支払家賃","amount":50000}], "credit": [{"account":"現金","amount":50000}], "explanation": "場所の賃借に伴い費用（Expense）である支払家賃が発生したため借方に記入し、資産である現金の減少を貸方に記帳します。" },
+ { "story": "スライムゼリーの材料（原液・薬草）80,000円分を仕入れ、代金は現金で支払った。（仕入）（現金）", "debit": [{"account":"仕入","amount":80000}], "credit": [{"account":"現金","amount":80000}], "explanation": "費用である仕入を借方に計上し、資産である現金の減少を貸方に記入します。" },
+ { "story": "開業初日、通りがかりの冒険者たちにゼリーが飛ぶように売れ、現金45,000円分の売上を得た。（現金）（売上）", "debit": [{"account":"現金","amount":45000}], "credit": [{"account":"売上","amount":45000}], "explanation": "商品の販売により収益である売上が発生し、対価として資産である現金が増加したため、それぞれ貸方・借方に記入します。" },
+ { "story": "屋台の看板と簡易調理器具（消耗品）15,000円分を現金で購入した。（消耗品費）（現金）", "debit": [{"account":"消耗品費","amount":15000}], "credit": [{"account":"現金","amount":15000}], "explanation": "少額で短期間に使い切る物品は「消耗品費」として費用計上し、現金の減少を貸方に記帳します。" },
+ { "story": "商業ギルドへの屋台営業登録料10,000円を現金で納めた。（租税公課）（現金）", "debit": [{"account":"租税公課","amount":10000}], "credit": [{"account":"現金","amount":10000}], "explanation": "公的機関へ納める登録料・手数料の性質を持つ支出は「租税公課」として借方に計上します。" },
+ { "story": "客寄せ用の呼び込み太鼓と水甕（消耗品）8,000円分を現金で購入した。（消耗品費）（現金）", "debit": [{"account":"消耗品費","amount":8000}], "credit": [{"account":"現金","amount":8000}], "explanation": "費用である消耗品費を借方に計上し、資産である現金の減少を貸方に記帳します。" },
+ { "story": "常連の冒険者から「次回入荷分を取り置いてほしい」と頼まれ、手付金として現金20,000円を受け取った。（現金）（前受金）", "debit": [{"account":"現金","amount":20000}], "credit": [{"account":"前受金","amount":20000}], "explanation": "商品の引き渡し前に受け取った金銭は、負債（Liability）である「前受金」として貸方に計上します。" },
+ { "story": "月末に金庫の金貨を数えたところ、帳簿残高より3,000円多いことが判明した。原因はまだ分からない。（現金）（現金過不足）", "debit": [{"account":"現金","amount":3000}], "credit": [{"account":"現金過不足","amount":3000}], "explanation": "実際有高が帳簿残高より多い場合、資産である現金を実際有高に合わせて増額し、差額を一時的に「現金過不足」として貸方に計上します。" },
+ { "story": "先の現金過不足3,000円について、いくら調べても原因が分からなかったため、雑益として処理することにした。（現金過不足）（雑益）", "debit": [{"account":"現金過不足","amount":3000}], "credit": [{"account":"雑益","amount":3000}], "explanation": "原因不明のまま解消しない現金過不足は、収益である「雑益」に振り替えて締めくくります。" }
+ ]},
+ { title: "Stage 2：魔導具の導入と素材仕入れ 〜営業基盤の構築〜", questions: [
+ { "story": "ゼリーを冷やす氷結魔導具（備品）250,000円を購入し、代金のうち100,000円は現金で支払い、残額150,000円は翌月末払いのツケとした。（備品）（現金）（未払金）", "debit": [{"account":"備品","amount":250000}], "credit": [{"account":"現金","amount":100000},{"account":"未払金","amount":150000}], "explanation": "魔導具の購入により資産である備品が増加（借方）。代金の一部支払いで現金が減少し、残額は未払金（負債）として貸方に計上する複合仕訳です。" },
+ { "story": "採取冒険者からゼリーの原材料となるスライム原液と薬草120,000円分を仕入れ、代金はギルドの信用掛け払いとした。（仕入）（買掛金）", "debit": [{"account":"仕入","amount":120000}], "credit": [{"account":"買掛金","amount":120000}], "explanation": "費用である仕入を借方に、営業上の後払い義務である買掛金（負債）を貸方に記帳します。" },
+ { "story": "調理効率を上げるため追加の携帯用魔導コンロ（備品）90,000円を購入し、代金は現金で支払った。（備品）（現金）", "debit": [{"account":"備品","amount":90000}], "credit": [{"account":"現金","amount":90000}], "explanation": "資産である備品の増加を借方に、資産である現金の減少を貸方に記帳します。" },
+ { "story": "追加の材料90,000円分を掛けで仕入れた。（仕入）（買掛金）", "debit": [{"account":"仕入","amount":90000}], "credit": [{"account":"買掛金","amount":90000}], "explanation": "費用の発生である仕入を借方に、負債の増加である買掛金を貸方に記帳します。" },
+ { "story": "買掛金のうち60,000円を現金で支払った。（買掛金）（現金）", "debit": [{"account":"買掛金","amount":60000}], "credit": [{"account":"現金","amount":60000}], "explanation": "負債である買掛金の減少を借方に、資産である現金の減少を貸方に記帳します。" },
+ { "story": "氷結魔導具の未払金150,000円のうち80,000円を、商人ギルドの普通預金口座から支払った。（未払金）（普通預金）", "debit": [{"account":"未払金","amount":80000}], "credit": [{"account":"普通預金","amount":80000}], "explanation": "負債である未払金の減少を借方に、資産である普通預金の減少を貸方に記帳します。" },
+ { "story": "護身用の魔除けの護符（消耗品）12,000円分を、後日払いの約束でギルド専門店から購入した。（消耗品費）（未払金）", "debit": [{"account":"消耗品費","amount":12000}], "credit": [{"account":"未払金","amount":12000}], "explanation": "商品以外の物品を後払いで購入した場合の債務は「未払金」として貸方に計上します。" },
+ { "story": "材料保管用の氷結庫（備品）180,000円を購入し、設置のための魔導陣構築費用20,000円を含めた代金全額を普通預金から支払った。（備品）（普通預金）", "debit": [{"account":"備品","amount":200000}], "credit": [{"account":"普通預金","amount":200000}], "explanation": "設置等の付随費用は取得原価に含めるため、備品200,000円を借方に一括計上します。" },
+ { "story": "仕入れたスライム原液の一部に不良品があり、10,000円分を仕入先に返品し、買掛金から差し引いてもらった。（買掛金）（仕入）", "debit": [{"account":"買掛金","amount":10000}], "credit": [{"account":"仕入","amount":10000}], "explanation": "仕入の返品（仕入戻し）は、負債である買掛金の減少を借方に、費用である仕入の取消を貸方に記帳します。" },
+ { "story": "材料運搬用のロバの飼料代（消耗品費）8,000円を現金で支払った。（消耗品費）（現金）", "debit": [{"account":"消耗品費","amount":8000}], "credit": [{"account":"現金","amount":8000}], "explanation": "費用である消耗品費を借方に、資産である現金の減少を貸方に記帳します。" }
+ ]},
+ { title: "Stage 3：冒険者たちへの販売と回収 〜現金と信用の回転〜", questions: [
+ { "story": "討伐遠征前の冒険者パーティーへ特製ゼリー200,000円分を販売し、代金のうち80,000円は現金で受け取り、残額120,000円は遠征後の後日回収（掛け）とした。（現金）（売掛金）（売上）", "debit": [{"account":"現金","amount":80000},{"account":"売掛金","amount":120000}], "credit": [{"account":"売上","amount":200000}], "explanation": "収益である売上200,000円を貸方に計上し、受け取り方に応じて現金と売掛金を借方に分けて記帳する複合仕訳です。" },
+ { "story": "遠征から無事帰還したパーティーから、以前の売掛金120,000円全額を商人ギルドの当座預金口座への振込で回収した。（当座預金）（売掛金）", "debit": [{"account":"当座預金","amount":120000}], "credit": [{"account":"売掛金","amount":120000}], "explanation": "資産である当座預金の増加を借方に、資産である売掛金の減少を貸方に記帳します。" },
+ { "story": "冒険者ギルド発行の信用決済カードで商品90,000円分を販売し、ギルドへの決済手数料（販売代金の5％）を販売時に計上した。（クレジット売掛金）（売上）（支払手数料）", "debit": [{"account":"クレジット売掛金","amount":85500},{"account":"支払手数料","amount":4500}], "credit": [{"account":"売上","amount":90000}], "explanation": "収益である売上90,000円を貸方に計上し、手数料を差し引いた「クレジット売掛金」と「支払手数料」を借方に分けて記帳する複合仕訳です。" },
+ { "story": "先のギルド信用決済カードの代金85,500円が、商人ギルドの普通預金口座に振り込まれた。（普通預金）（クレジット売掛金）", "debit": [{"account":"普通預金","amount":85500}], "credit": [{"account":"クレジット売掛金","amount":85500}], "explanation": "資産である普通預金の増加を借方に、資産であるクレジット売掛金の消滅を貸方に記帳します。" },
+ { "story": "大口の討伐依頼主から300,000円分の注文が入り、代金は商人ギルド発行の魔導契約証書（電子的な決済記録）で受け取る契約とした。（電子記録債権）（売上）", "debit": [{"account":"電子記録債権","amount":300000}], "credit": [{"account":"売上","amount":300000}], "explanation": "資産である電子記録債権を借方に、収益である売上を貸方に記帳します。" },
+ { "story": "先の魔導契約証書300,000円が決済期日を迎え、当座預金口座に入金された。（当座預金）（電子記録債権）", "debit": [{"account":"当座預金","amount":300000}], "credit": [{"account":"電子記録債権","amount":300000}], "explanation": "資産である当座預金の増加を借方に、資産である電子記録債権の消滅を貸方に記帳します。" },
+ { "story": "期末の売掛金残高に対して2％の貸倒れを見積もったところ、必要額が現在の貸倒引当金残高より10,000円不足していたため、差額補充法により繰り入れた。（貸倒引当金繰入）（貸倒引当金）", "debit": [{"account":"貸倒引当金繰入","amount":10000}], "credit": [{"account":"貸倒引当金","amount":10000}], "explanation": "費用である貸倒引当金繰入を借方に、評価性引当金である貸倒引当金を貸方に計上します。" },
+ { "story": "遠征中に消息を絶った冒険者の売掛金15,000円が回収不能と判明し、貸倒引当金の残高の範囲内で貸倒れ処理した。（貸倒引当金）（売掛金）", "debit": [{"account":"貸倒引当金","amount":15000}], "credit": [{"account":"売掛金","amount":15000}], "explanation": "設定済みの貸倒引当金を取り崩し（借方）、資産である売掛金の消滅を貸方に記帳します。" },
+ { "story": "先に掛けで販売した商品のうち20,000円分について、品質不良を理由に返品を受け、売掛金から差し引いた。（売上）（売掛金）", "debit": [{"account":"売上","amount":20000}], "credit": [{"account":"売掛金","amount":20000}], "explanation": "売上の返品（売上戻り）は、収益である売上の取消を借方に、資産である売掛金の減少を貸方に記帳します。" },
+ { "story": "隣町での出張販売にかかった旅費交通費8,000円を現金で支払った。（旅費交通費）（現金）", "debit": [{"account":"旅費交通費","amount":8000}], "credit": [{"account":"現金","amount":8000}], "explanation": "費用である旅費交通費を借方に、資産である現金の減少を貸方に記帳します。" }
+ ]},
+ { title: "Stage 4：ギルド決済と資金運用 〜事業拡大への準備〜", questions: [
+ { "story": "採取冒険者への材料代（買掛金）のうち70,000円を決済するため、商人ギルド宛ての小切手を振り出して当座預金から支払った。（買掛金）（当座預金）", "debit": [{"account":"買掛金","amount":70000}], "credit": [{"account":"当座預金","amount":70000}], "explanation": "負債である買掛金の減少を借方に、小切手振出による資産である当座預金の減少を貸方に記帳します。" },
+ { "story": "手元の防犯対策および利息獲得のため、屋台の余剰現金150,000円を商人ギルドの普通預金口座へ預け入れた。（普通預金）（現金）", "debit": [{"account":"普通預金","amount":150000}], "credit": [{"account":"現金","amount":150000}], "explanation": "資産である普通預金の増加を借方に、資産である現金の減少を貸方に記帳します。" },
+ { "story": "店舗拡張のため、商人ギルドから500,000円を借り入れ、当座預金口座に入金された。（当座預金）（借入金）", "debit": [{"account":"当座預金","amount":500000}], "credit": [{"account":"借入金","amount":500000}], "explanation": "資産である当座預金の増加を借方に、返済義務である負債の借入金を貸方に計上します。" },
+ { "story": "借入金の一部100,000円と利息3,000円を、普通預金から返済した。（借入金）（支払利息）（普通預金）", "debit": [{"account":"借入金","amount":100000},{"account":"支払利息","amount":3000}], "credit": [{"account":"普通預金","amount":103000}], "explanation": "負債の減少である借入金と費用である支払利息を借方に計上し、資産である普通預金の減少を貸方に記帳する複合仕訳です。" },
+ { "story": "大通り沿いの新しい出店枠を確保するため、権利金（敷金相当）として差入保証金50,000円を現金で支払った。（差入保証金）（現金）", "debit": [{"account":"差入保証金","amount":50000}], "credit": [{"account":"現金","amount":50000}], "explanation": "将来返還される見込みの保証金は、資産である「差入保証金」として借方に計上します。" },
+ { "story": "大口の得意先から、売掛金の代わりに約束手形150,000円を受け取った。（受取手形）（売掛金）", "debit": [{"account":"受取手形","amount":150000}], "credit": [{"account":"売掛金","amount":150000}], "explanation": "手形債権である資産の受取手形を借方に、資産である売掛金の消滅を貸方に記帳します。" },
+ { "story": "先の約束手形150,000円が満期を迎え、当座預金口座に入金された。（当座預金）（受取手形）", "debit": [{"account":"当座預金","amount":150000}], "credit": [{"account":"受取手形","amount":150000}], "explanation": "資産である当座預金の増加を借方に、資産である受取手形の消滅を貸方に記帳します。" },
+ { "story": "買掛金100,000円の支払いのため、商人ギルド宛ての約束手形を振り出して交付した。（買掛金）（支払手形）", "debit": [{"account":"買掛金","amount":100000}], "credit": [{"account":"支払手形","amount":100000}], "explanation": "負債である買掛金の減少を借方に、新たな手形債務である支払手形（負債）を貸方に計上します。" },
+ { "story": "先に振り出した約束手形100,000円が満期になり、当座預金口座から引き落とされた。（支払手形）（当座預金）", "debit": [{"account":"支払手形","amount":100000}], "credit": [{"account":"当座預金","amount":100000}], "explanation": "負債である支払手形の消滅を借方に、資産である当座預金の減少を貸方に記帳します。" },
+ { "story": "帳簿を見返すと、消耗品費として処理していた15,000円が、実は材料の仕入だったと判明し、正しい科目に訂正した。（仕入）（消耗品費）", "debit": [{"account":"仕入","amount":15000}], "credit": [{"account":"消耗品費","amount":15000}], "explanation": "誤って計上していた消耗品費を取り消し、正しい費用科目である仕入に振り替える訂正仕訳です。" }
+ ]},
+ { title: "Stage 5：商会設立と決算整備 〜大商社への飛翔〜", questions: [
+ { "story": "屋台から固定店舗「スライム商会」へ発展させるため店舗用建物800,000円を購入し、手付金として現金200,000円を支払い、残額600,000円は商人ギルドからの長期借入金とした。（建物）（現金）（長期借入金）", "debit": [{"account":"建物","amount":800000}], "credit": [{"account":"現金","amount":200000},{"account":"長期借入金","amount":600000}], "explanation": "固定資産である建物800,000円の増加（借方）。代金支払いで現金が200,000円減少し、長期借入金600,000円が増加する複合仕訳です。" },
+ { "story": "近隣の新人商人たちへスキル【複式簿記】の記帳指導を行い、指導料40,000円を現金で受け取った。（現金）（受取手数料）", "debit": [{"account":"現金","amount":40000}], "credit": [{"account":"受取手数料","amount":40000}], "explanation": "役務提供の対価受領により資産である現金が増加したため借方に記入し、本業外のサービス収益である受取手数料を貸方に記帳します。" },
+ { "story": "「スライム商会」を正式に株式会社として設立。商会株を発行し、払込金額2,000,000円の全額が普通預金口座に払い込まれ、その全額を資本金とした。（普通預金）（資本金）", "debit": [{"account":"普通預金","amount":2000000}], "credit": [{"account":"資本金","amount":2000000}], "explanation": "株式発行による払込金額は、純資産である資本金として貸方に計上します。" },
+ { "story": "株主総会において、繰越利益剰余金400,000円から株主配当金80,000円を支払うことが承認された。あわせて利益準備金8,000円を積み立てる。（繰越利益剰余金）（未払配当金）（利益準備金）", "debit": [{"account":"繰越利益剰余金","amount":88000}], "credit": [{"account":"未払配当金","amount":80000},{"account":"利益準備金","amount":8000}], "explanation": "純資産である繰越利益剰余金の減少を借方に、負債である未払配当金と純資産の利益準備金を貸方に分けて記帳する複合仕訳です。" },
+ { "story": "商会の建物（取得原価800,000円、残存価額ゼロ、耐用年数20年、定額法）について、当期分の減価償却費を間接法で計上する。（減価償却費）（建物減価償却累計額）", "debit": [{"account":"減価償却費","amount":40000}], "credit": [{"account":"建物減価償却累計額","amount":40000}], "explanation": "間接法では資産を直接減額せず、評価性引当項目である建物減価償却累計額を貸方に計上します（800,000円÷20年＝40,000円）。" },
+ { "story": "決算整理：当期に支払った火災保険料のうち、未経過分12,000円を前払費用として繰り延べた。（前払費用）（支払保険料）", "debit": [{"account":"前払費用","amount":12000}], "credit": [{"account":"支払保険料","amount":12000}], "explanation": "当期の費用から次期分を除外し、資産である前払費用へ振り替えます。" },
+ { "story": "決算整理：貸付けている資金に対する当期分の未収利息5,000円を計上した。（未収利息）（受取利息）", "debit": [{"account":"未収利息","amount":5000}], "credit": [{"account":"受取利息","amount":5000}], "explanation": "発生しているが未回収の利息を、資産である未収利息として借方に、収益である受取利息を貸方に計上します。" },
+ { "story": "決算整理：今期分の広告宣伝費のうち、まだ支払っていない8,000円を未払費用として計上した。（広告宣伝費）（未払費用）", "debit": [{"account":"広告宣伝費","amount":8000}], "credit": [{"account":"未払費用","amount":8000}], "explanation": "発生しているが未払いの費用を借方に、負債である未払費用を貸方に計上します。" },
+ { "story": "決算にあたり、商業ギルドへの流通税（消費税相当）を精算する。仮受分50,000円と仮払分12,000円を相殺し、差額38,000円を未払分として計上した。（仮受消費税）（仮払消費税）（未払消費税）", "debit": [{"account":"仮受消費税","amount":50000}], "credit": [{"account":"仮払消費税","amount":12000},{"account":"未払消費税","amount":38000}], "explanation": "仮受消費税と仮払消費税を相殺し、差額を負債である未払消費税として確定させる複合仕訳です。" },
+ { "story": "決算振替：算定された当期純利益320,000円を、損益勘定から資本金へ振り替えた。ちっぽけな屋台は今や、大陸有数の大商会へと成長を遂げていた。（損益）（資本金）", "debit": [{"account":"損益","amount":320000}], "credit": [{"account":"資本金","amount":320000}], "explanation": "算定された純利益は損益を借方に、資本金を貸方に記入して振り替えます。" }
+ ]}
+];
+let currentStageIndex = 0;
+let currentQuestions = [];
+let currentIndex = 0;
+let correctCount = 0;
+let wrongList = [];
+let answeredSet = new Set();
+let isReviewMode = false;
+
+// iPhoneのQuick Look等、file://で開いた際にlocalStorageが例外を投げる環境でも
+// アプリ本体が止まらないようにする安全な読み書き関数
+function lsGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+function lsSet(key, value) { try { localStorage.setItem(key, value); } catch (e) {} }
+function lsClear() { try { localStorage.clear(); } catch (e) {} }
+
+function init() {
+ restoreImported();
+ const savedStage = lsGet("isekai_stall_boki_current_stage");
+ currentStageIndex = savedStage ? parseInt(savedStage, 10) : 0;
+ if (currentStageIndex < 0 || currentStageIndex >= STAGES.length) currentStageIndex = 0;
+ loadStage(currentStageIndex);
+}
+function switchStage(stageIdx) {
+ if (stageIdx === currentStageIndex && !isReviewMode) return;
+ loadStage(stageIdx);
+}
+function loadStage(stageIdx) {
+ currentStageIndex = stageIdx;
+ lsSet("isekai_stall_boki_current_stage", currentStageIndex);
+ for (let i = 0; i < STAGES.length; i++) {
+ const btn = document.getElementById(`tab-${i}`);
+ if (btn) { if (i === stageIdx) btn.classList.add("active"); else btn.classList.remove("active"); }
+ }
+ const stageObj = STAGES[stageIdx];
+ document.getElementById("stage-badge-text").textContent = `STAGE ${stageIdx + 1}`;
+ document.getElementById("sub-title").textContent = `〜 ${stageObj.title} 〜`;
+ const keyPrefix = `isekai_stall_boki_st${stageIdx}_`;
+ let stageData = stageObj.questions;
+ try {
+ const customData = lsGet(`${keyPrefix}data`);
+ if (customData) { const parsed = JSON.parse(customData); if (Array.isArray(parsed) && parsed.length > 0) stageData = parsed; }
+ } catch(e) {}
+ currentQuestions = [...stageData];
+ currentIndex = 0; correctCount = 0; wrongList = []; isReviewMode = false; answeredSet.clear();
+ document.getElementById("quiz-area").style.display = "block";
+ document.getElementById("clear-area").style.display = "none";
+ loadQuestion(0);
+}
+function createRowHTML(account = "", amount = "") {
+ const div = document.createElement("div");
+ div.className = "entry-row";
+ div.innerHTML = `<input type="text" placeholder="科目" value="${account}"><input type="number" placeholder="金額" value="${amount}"><button type="button" class="btn-remove" onclick="removeRow(this)">✕</button>`;
+ return div;
+}
+function addRow(side) { const container = document.getElementById(`${side}-rows`); if (container) container.appendChild(createRowHTML()); }
+function removeRow(btn) {
+ const row = btn.closest(".entry-row");
+ if (row && row.parentElement && row.parentElement.children.length > 1) row.remove();
+ else customAlert("最低1行は必要です。");
+}
+function loadQuestion(index) {
+ if (!currentQuestions || currentQuestions.length === 0) return;
+ if (index < 0 || index >= currentQuestions.length) index = 0;
+ currentIndex = index;
+ const tag = document.getElementById("status-tag");
+ if (isReviewMode) { tag.textContent = "帳簿見直し中"; tag.className = "status-badge review"; }
+ else { tag.textContent = "商談中"; tag.className = "status-badge"; }
+ const prefix = isReviewMode ? "見直し" : `帳簿`;
+ document.getElementById("q-number").textContent = `${prefix} // ${index + 1} / ${currentQuestions.length}`;
+ document.getElementById("story-display").textContent = currentQuestions[index].story;
+ document.getElementById("debit-rows").innerHTML = "";
+ document.getElementById("credit-rows").innerHTML = "";
+ addRow("debit"); addRow("credit");
+ const res = document.getElementById("result-display");
+ res.style.display = "none"; res.className = "result-box";
+ document.getElementById("submit-btn").style.display = "block";
+ const nextBtn = document.getElementById("next-btn");
+ nextBtn.textContent = (currentIndex === currentQuestions.length - 1) ? "結果を確認する" : "次の商談へ ▶";
+ const percent = Math.round(((index + 1) / currentQuestions.length) * 100);
+ document.getElementById("progress-fill").style.width = percent + "%";
+ document.getElementById("progress-text").textContent = `取引 ${index + 1} / ${currentQuestions.length} (${percent}%)`;
+ setTimeout(() => { const firstInput = document.querySelector("#debit-rows input[type='text']"); if (firstInput) firstInput.focus(); }, 50);
+}
+function getEntries(side) {
+ const container = document.getElementById(`${side}-rows`);
+ if (!container) return [];
+ const entries = [];
+ for (let row of container.children) {
+ const inputs = row.querySelectorAll("input");
+ if (inputs.length >= 2) { const account = inputs[0].value.trim(); const amount = parseInt(inputs[1].value, 10); if (account && !isNaN(amount)) entries.push({ account, amount }); }
+ }
+ return entries;
+}
+function spawnRisingMagic() {
+ for (let i = 0; i < 26; i++) {
+ const item = document.createElement("div");
+ item.className = "rising-item";
+ item.textContent = RISING_EFFECT_SYMBOLS[Math.floor(Math.random() * RISING_EFFECT_SYMBOLS.length)];
+ item.style.left = (Math.random() * 92 + 4) + "vw";
+ item.style.setProperty("--drift", (Math.random() * 80 - 40) + "px");
+ const duration = Math.random() * 1.5 + 2.0; const delay = Math.random() * 0.4;
+ item.style.fontSize = (Math.random() * 16 + 20) + "px";
+ item.style.animationDuration = duration + "s"; item.style.animationDelay = delay + "s";
+ document.body.appendChild(item);
+ setTimeout(() => { item.remove(); }, (duration + delay) * 1000);
+ }
+}
+function triggerShake() {
+ const container = document.getElementById("mainContainer");
+ container.classList.remove("shake-animation"); void container.offsetWidth; container.classList.add("shake-animation");
+ setTimeout(() => { container.classList.remove("shake-animation"); }, 500);
+}
+function checkAnswer() {
+ const q = currentQuestions[currentIndex];
+ const userDebit = getEntries("debit"); const userCredit = getEntries("credit");
+ const normalize = d => Array.isArray(d) ? d : [d];
+ const cDebit = normalize(q.debit); const cCredit = normalize(q.credit);
+ const matchSide = (u, c) => {
+ if (u.length !== c.length) return false;
+ const sU = [...u].sort((a,b) => a.account.localeCompare(b.account) || a.amount - b.amount);
+ const sC = [...c].sort((a,b) => a.account.localeCompare(b.account) || a.amount - b.amount);
+ return sU.every((v, i) => v.account === sC[i].account && v.amount === sC[i].amount);
+ };
+ const isOk = matchSide(userDebit, cDebit) && matchSide(userCredit, cCredit);
+ const res = document.getElementById("result-display");
+ res.style.display = "block";
+ if (isOk) {
+ spawnRisingMagic();
+ res.className = "result-box correct";
+ res.innerHTML = `<strong>🎉 商談成立！</strong><br>${escapeHtml(q.explanation)}`;
+ if (!answeredSet.has(currentIndex)) { correctCount++; if (isReviewMode) wrongList = wrongList.filter(item => item.story !== q.story); answeredSet.add(currentIndex); }
+ } else {
+ triggerShake();
+ res.className = "result-box wrong";
+ const dStr = cDebit.map(d => `(${escapeHtml(d.account)}: ${d.amount.toLocaleString()}円)`).join(" ");
+ const cStr = cCredit.map(c => `(${escapeHtml(c.account)}: ${c.amount.toLocaleString()}円)`).join(" ");
+ res.innerHTML = `<strong>⚠️ 帳簿が合いません</strong><br>正しい記帳 [借方]: ${dStr}<br>正しい記帳 [貸方]: ${cStr}<br><br>${escapeHtml(q.explanation)}`;
+ if (!answeredSet.has(currentIndex)) { if (!wrongList.some(item => item.story === q.story)) wrongList.push(q); answeredSet.add(currentIndex); }
+ }
+}
+function prevQuestion() { if (currentIndex > 0) loadQuestion(currentIndex - 1); }
+function nextQuestion() { if (currentIndex < currentQuestions.length - 1) loadQuestion(currentIndex + 1); else showClearScreen(); }
+function showClearScreen() {
+ document.getElementById("quiz-area").style.display = "none";
+ const clearArea = document.getElementById("clear-area");
+ clearArea.style.display = "block";
+ const total = currentQuestions.length;
+ const badgeArea = document.getElementById("complete-badge-area");
+ const scoreText = document.getElementById("score-text");
+ const revArea = document.getElementById("review-btn-area");
+ badgeArea.innerHTML = ""; revArea.innerHTML = "";
+ if (wrongList.length === 0) {
+ spawnRisingMagic();
+ badgeArea.innerHTML = `<div style="display:inline-block; padding:8px 18px; background:rgba(217,119,6,0.2); border:1px solid var(--primary); border-radius:6px; font-weight:bold; color:var(--primary); margin-bottom:14px; font-size:1.05rem;">★ 全商談、成立！ ★</div>`;
+ scoreText.innerHTML = `この章の取引をすべて完璧に記帳しました。 (${total} / ${total})`;
+ } else {
+ scoreText.innerHTML = `${total} 件中 ${correctCount} 件の商談が成立。<br>まだ帳簿が合っていない取引が ${wrongList.length} 件あります。`;
+ const btn = document.createElement("button");
+ btn.className = "btn-review";
+ btn.textContent = `合っていない取引だけ見直す (${wrongList.length}件)`;
+ btn.onclick = () => {
+ isReviewMode = true; currentQuestions = [...wrongList]; currentIndex = 0; correctCount = 0; answeredSet.clear();
+ document.getElementById("quiz-area").style.display = "block"; clearArea.style.display = "none"; loadQuestion(0);
+ };
+ revArea.appendChild(btn);
+ }
+}
+function startFreshStage() { loadStage(currentStageIndex); }
+function forceReset() {
+ customConfirm("帳簿を初期化して、最初の状態に戻しますか？", () => { lsClear(); location.reload(); });
+}
+// ===== 取り込み機能（テーマ / 全ステージ / 現在の章） =====
+const KEY_THEME = "isekai_stall_boki_theme";
+const KEY_STAGES = "isekai_stall_boki_stages";
+const DEFAULT_TAB_LABELS = ["屋台開業", "魔導具導入", "販売と回収", "資金運用", "商会設立"];
+const customTitleIdx = new Set();
+const themeProps = new Set();
+let DEFAULT_LOOK = null;
+
+function lsRemove(key) { try { localStorage.removeItem(key); } catch (e) {} }
+
+function escapeHtml(value) {
+ return String(value == null ? "" : value)
+ .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+ .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function shortTitle(title) {
+ return String(title || "").replace(/^\s*(stage|level)\s*\d+\s*[：:]\s*/i, "").split(/[〜~]/)[0].trim();
+}
+function updateTabLabels() {
+ for (let i = 0; i < STAGES.length; i++) {
+ const btn = document.getElementById(`tab-${i}`);
+ const sub = btn ? btn.querySelector(".tab-sub") : null;
+ if (!sub) continue;
+ const custom = customTitleIdx.has(i) ? shortTitle(STAGES[i].title) : "";
+ sub.textContent = custom || DEFAULT_TAB_LABELS[i] || "";
+ sub.classList.toggle("clip", !!custom);
+ }
+}
+
+// ---- テーマ ----
+function captureDefaultLook() {
+ const t = document.getElementById("app-title"), l = document.getElementById("app-logo"), b = document.getElementById("submit-btn");
+ DEFAULT_LOOK = { title: t ? t.textContent : "", logo: l ? l.textContent : "", submit: b ? b.textContent : "", symbols: RISING_EFFECT_SYMBOLS.slice(),
+ fontMain: getComputedStyle(document.documentElement).getPropertyValue("--font-main").trim(),
+ fontTitle: getComputedStyle(document.documentElement).getPropertyValue("--font-title").trim() };
+}
+function clearThemeFontLinks() {
+ document.querySelectorAll("link[data-theme-font]").forEach(el => el.remove());
+}
+function clearTheme() {
+ const root = document.documentElement;
+ clearThemeFontLinks();
+ themeProps.forEach(k => root.style.removeProperty(k));
+ themeProps.clear();
+ root.classList.remove("themed");
+ if (!DEFAULT_LOOK) return;
+ const t = document.getElementById("app-title"), l = document.getElementById("app-logo"), b = document.getElementById("submit-btn");
+ if (t) t.textContent = DEFAULT_LOOK.title;
+ if (l) l.textContent = DEFAULT_LOOK.logo;
+ if (b) b.textContent = DEFAULT_LOOK.submit;
+ RISING_EFFECT_SYMBOLS.splice(0, RISING_EFFECT_SYMBOLS.length, ...DEFAULT_LOOK.symbols);
+}
+function contrastText(hex) {
+ const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(hex || "").trim());
+ if (!m) return null;
+ let h = m[1];
+ if (h.length === 3) h = h.split("").map(c => c + c).join("");
+ const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+ return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.5 ? "#111111" : "#ffffff";
+}
+// ---- フォント（任意。指定がなければ元のフォントのまま） ----
+const GENERIC_FONTS = ["serif", "sans-serif", "monospace", "cursive", "fantasy", "system-ui", "ui-monospace", "ui-sans-serif", "ui-serif", "ui-rounded"];
+function firstFamily(v) { return String(v).split(",")[0].trim().replace(/^["']|["']$/g, ""); }
+function fontStack(v, fallback) {
+ if (typeof v !== "string") return null;
+ const t = v.trim();
+ if (!t || t.length > 200 || !/^[^;{}<>()\\\/]*$/.test(t)) return null;
+ const isList = t.includes(",") || /["']/.test(t);
+ const head = isList ? t : (GENERIC_FONTS.includes(t.toLowerCase()) ? t : `"${t}"`);
+ return fallback ? `${head}, ${fallback}` : head;
+}
+function loadThemeFonts(theme) {
+ const hrefs = [];
+ if (typeof theme.fontUrl === "string" && /^https:\/\/fonts\.googleapis\.com\//.test(theme.fontUrl.trim())) {
+ hrefs.push(theme.fontUrl.trim());
+ } else {
+ const seen = [];
+ ["fontMain", "fontTitle"].forEach(k => {
+ if (typeof theme[k] !== "string") return;
+ const f = firstFamily(theme[k]);
+ if (/^[A-Za-z0-9][A-Za-z0-9 ]{1,40}$/.test(f) && !GENERIC_FONTS.includes(f.toLowerCase()) && !seen.includes(f)) seen.push(f);
+ });
+ seen.forEach(f => hrefs.push("https://fonts.googleapis.com/css2?family=" + encodeURIComponent(f).replace(/%20/g, "+") + "&display=swap"));
+ }
+ hrefs.forEach(href => {
+ const link = document.createElement("link");
+ link.rel = "stylesheet"; link.href = href; link.setAttribute("data-theme-font", "1");
+ document.head.appendChild(link);
+ });
+}
+function applyThemeFonts(theme) {
+ const root = document.documentElement;
+ const defMain = DEFAULT_LOOK ? DEFAULT_LOOK.fontMain : "";
+ const defTitle = DEFAULT_LOOK ? DEFAULT_LOOK.fontTitle : "";
+ const main = fontStack(theme.fontMain, defMain);
+ const title = fontStack(theme.fontTitle, defTitle || defMain);
+ if (!main && !title) return;
+ if (main) { root.style.setProperty("--font-main", main); themeProps.add("--font-main"); }
+ if (title) { root.style.setProperty("--font-title", title); themeProps.add("--font-title"); }
+ else if (main) { root.style.setProperty("--font-title", "var(--font-main)"); themeProps.add("--font-title"); }
+ loadThemeFonts(theme);
+}
+
+function applyTheme(theme) {
+ const root = document.documentElement;
+ if (!DEFAULT_LOOK) captureDefaultLook();
+ clearTheme();
+ const colors = theme && typeof theme.colors === "object" && theme.colors ? theme.colors : {};
+ let count = 0;
+ Object.keys(colors).forEach(k => {
+ const v = colors[k];
+ if (/^--[a-z0-9-]+$/i.test(k) && typeof v === "string" && v.length < 200 && !/url\(|[;{}]/i.test(v)) {
+ root.style.setProperty(k, v); themeProps.add(k); count++;
+ }
+ });
+ if (count > 0) root.classList.add("themed");
+ if (!colors["--on-primary"]) {
+ const c = contrastText(colors["--primary"]);
+ if (c) { root.style.setProperty("--on-primary", c); themeProps.add("--on-primary"); }
+ }
+ applyThemeFonts(theme);
+ const setText = (id, val) => { const el = document.getElementById(id); if (el && typeof val === "string" && val.trim()) el.textContent = val.trim(); };
+ setText("app-title", theme.appTitle);
+ setText("app-logo", theme.appLogo);
+ setText("submit-btn", theme.submitBtnText);
+ if (Array.isArray(theme.risingSymbols)) {
+ const syms = theme.risingSymbols.filter(x => typeof x === "string" && x.trim()).slice(0, 12);
+ if (syms.length) RISING_EFFECT_SYMBOLS.splice(0, RISING_EFFECT_SYMBOLS.length, ...syms);
+ }
+ if (typeof theme.cardWatermark === "string" && theme.cardWatermark.trim()) {
+ root.style.setProperty("--card-watermark", JSON.stringify(theme.cardWatermark.trim().slice(0, 60)));
+ themeProps.add("--card-watermark");
+ } else if (count > 0) {
+ root.style.setProperty("--card-watermark", '""');
+ themeProps.add("--card-watermark");
+ }
+}
+function resetTheme() {
+ clearTheme();
+ lsRemove(KEY_THEME);
+ customAlert("テーマを初期値に戻しました。");
+}
+
+// ---- 保存済みデータの復元 ----
+function restoreImported() {
+ try {
+ const saved = lsGet(KEY_STAGES);
+ if (saved) {
+ const arr = JSON.parse(saved);
+ if (Array.isArray(arr)) arr.forEach((st, i) => {
+ if (STAGES[i] && st && Array.isArray(st.questions) && st.questions.length) {
+ STAGES[i].questions = st.questions;
+ if (st.title) { STAGES[i].title = st.title; customTitleIdx.add(i); }
+ }
+ });
+ }
+ } catch (e) {}
+ try {
+ const th = lsGet(KEY_THEME);
+ if (th) applyTheme(JSON.parse(th));
+ } catch (e) {}
+ updateTabLabels();
+}
+
+// ---- 貼り付けた文字の解析 ----
+function lineOf(text, pos) { return text.slice(0, pos).split("\n").length; }
+
+function findClose(s, start) {
+ let depth = 0, inStr = false;
+ for (let i = start; i < s.length; i++) {
+ const c = s[i];
+ if (inStr) { if (c === "\\") i++; else if (c === '"') inStr = false; continue; }
+ if (c === '"') inStr = true;
+ else if (c === "{" || c === "[") depth++;
+ else if (c === "}" || c === "]") { depth--; if (depth === 0) return i; }
+ }
+ return -1;
+}
+
+function stripTrailingCommas(t) {
+ let out = "", inStr = false;
+ for (let i = 0; i < t.length; i++) {
+ const c = t[i];
+ if (inStr) { out += c; if (c === "\\") { out += t[++i] || ""; } else if (c === '"') inStr = false; continue; }
+ if (c === '"') { inStr = true; out += c; continue; }
+ if (c === ",") {
+ let j = i + 1;
+ while (j < t.length && /\s/.test(t[j])) j++;
+ if (t[j] === "}" || t[j] === "]") continue;
+ }
+ out += c;
+ }
+ return out;
+}
+
+function parseJsonBlocks(raw) {
+ const s = raw.replace(/[​﻿]/g, "").replace(/```[a-zA-Z0-9]*/g, "").replace(/^\s*\/\/.*$/gm, "");
+ const blocks = [];
+ let i = 0;
+ while (i < s.length) {
+ const c = s[i];
+ if (c === "{" || c === "[") {
+ const end = findClose(s, i);
+ if (end < 0) throw new Error(`${lineOf(s, i)}行目の ${c} に対応する閉じ括弧がありません。貼り付けた内容が途中で切れていないか確認してください。`);
+ const text = s.slice(i, end + 1);
+ try {
+ blocks.push(JSON.parse(stripTrailingCommas(text)));
+ } catch (e) {
+ const pm = /position (\d+)/.exec(e.message || "");
+ const where = pm ? `（${lineOf(s, i) + lineOf(text, parseInt(pm[1], 10)) - 1}行目付近）` : "";
+ throw new Error(`JSONの書き方に誤りがあります${where}。引用符が “ ” になっていないか、カンマや括弧が抜けていないか確認してください。`);
+ }
+ i = end + 1;
+ } else i++;
+ }
+ return blocks;
+}
+
+// ---- 問題データの検査 ----
+function checkQuestions(qs, label, warnings) {
+ for (let i = 0; i < qs.length; i++) {
+ const q = qs[i];
+ const at = `${label}${i + 1}問目`;
+ if (!q || typeof q !== "object") return `${at}：問題の形が正しくありません。`;
+ if (typeof q.story !== "string" || !q.story.trim()) return `${at}：story（物語文）がありません。`;
+ for (const side of ["debit", "credit"]) {
+ let arr = q[side];
+ if (arr && !Array.isArray(arr) && typeof arr === "object") arr = [arr];
+ if (!Array.isArray(arr) || arr.length === 0) return `${at}：${side} がありません。`;
+ for (const e of arr) {
+ if (!e || typeof e.account !== "string" || !e.account.trim()) return `${at}：${side} の account（勘定科目名）がありません。`;
+ const n = typeof e.amount === "string" ? Number(e.amount.replace(/,/g, "")) : e.amount;
+ if (!Number.isInteger(n) || n < 1) return `${at}：${side} の amount は1以上の整数にしてください。`;
+ e.amount = n;
+ }
+ q[side] = arr;
+ }
+ if (typeof q.explanation !== "string") q.explanation = q.explanation == null ? "" : String(q.explanation);
+ const sum = a => a.reduce((t, e) => t + e.amount, 0);
+ if (sum(q.debit) !== sum(q.credit)) warnings.push(at);
+ }
+ return null;
+}
+
+// ブラウザが本当に保存できているかを、書いて読み戻して確認する
+function storageOk() {
+ try {
+ const k = KEY_THEME + "_probe", v = String(Date.now());
+ localStorage.setItem(k, v);
+ const ok = localStorage.getItem(k) === v;
+ localStorage.removeItem(k);
+ return ok;
+ } catch (e) { return false; }
+}
+
+function loadCustomData() {
+ const raw = document.getElementById("json-input").value;
+ if (!raw.trim()) { customAlert("JSONデータを貼り付けてください。"); return; }
+ let blocks;
+ try { blocks = parseJsonBlocks(raw); } catch (e) { customAlert("⚠️ " + e.message); return; }
+ if (blocks.length === 0) { customAlert("⚠️ JSONが見つかりません。{ から } まで、または [ から ] までを貼り付けてください。"); return; }
+
+ let theme = null, stages = null, single = null;
+ const warnings = [];
+ const THEME_KEYS = ["colors", "appTitle", "appLogo", "submitBtnText", "risingSymbols", "cardWatermark"];
+ for (const b of blocks) {
+ if (Array.isArray(b)) {
+ if (b.length === 0) { customAlert("⚠️ 空の配列 [ ] があります。"); return; }
+ if (b.every(x => x && typeof x === "object" && Array.isArray(x.questions))) {
+ if (stages) { customAlert("⚠️ 5ステージ分の問題が2組あります。1組だけ貼り付けてください。"); return; }
+ for (let i = 0; i < b.length; i++) {
+ if (b[i].questions.length === 0) { customAlert(`⚠️ ${i + 1}ステージ目の questions が空です。`); return; }
+ const err = checkQuestions(b[i].questions, `${i + 1}ステージ目の`, warnings);
+ if (err) { customAlert("⚠️ " + err); return; }
+ }
+ stages = b;
+ } else if (b.every(x => x && typeof x === "object" && "story" in x)) {
+ if (single) { customAlert("⚠️ 現在の章の問題が2組あります。1組だけ貼り付けてください。"); return; }
+ const err = checkQuestions(b, "", warnings);
+ if (err) { customAlert("⚠️ " + err); return; }
+ single = b;
+ } else {
+ customAlert("⚠️ 問題データの形が判別できません。各ステージは { \"title\": ..., \"questions\": [...] }、現在の章だけなら [ { \"story\": ... }, ... ] の形にしてください。");
+ return;
+ }
+ } else if (b && typeof b === "object") {
+ if (!THEME_KEYS.some(k => k in b)) { customAlert("⚠️ { } のデータの内容が判別できません。テーマ設定には colors などが必要です。"); return; }
+ theme = b;
+ }
+ }
+ if (stages && single) { customAlert("⚠️ 5ステージ分の問題と、現在の章の問題が両方あります。どちらか一方にしてください。"); return; }
+
+ const done = [];
+ const notes = [];
+ if (theme) {
+ applyTheme(theme);
+ lsSet(KEY_THEME, JSON.stringify(theme));
+ done.push("テーマを反映しました");
+ }
+ if (stages) {
+ const n = Math.min(stages.length, STAGES.length);
+ let prev = [];
+ try { const p = JSON.parse(lsGet(KEY_STAGES) || "[]"); if (Array.isArray(p)) prev = p; } catch (e) {}
+ let total = 0;
+ for (let i = 0; i < n; i++) {
+ const st = stages[i];
+ if (typeof st.title === "string" && st.title.trim()) { STAGES[i].title = st.title.trim(); customTitleIdx.add(i); }
+ STAGES[i].questions = st.questions;
+ prev[i] = { title: STAGES[i].title, questions: st.questions };
+ lsRemove(`isekai_stall_boki_st${i}_data`);
+ total += st.questions.length;
+ }
+ lsSet(KEY_STAGES, JSON.stringify(prev));
+ updateTabLabels();
+ loadStage(0);
+ done.push(`${n}ステージ（${total}問）を取り込みました`);
+ if (stages.length > STAGES.length) notes.push(`${STAGES.length + 1}ステージ目以降は、このアプリでは使えないため取り込んでいません。`);
+ }
+ if (single) {
+ STAGES[currentStageIndex].questions = single;
+ lsSet(`isekai_stall_boki_st${currentStageIndex}_data`, JSON.stringify(single));
+ loadStage(currentStageIndex);
+ done.push(`STAGE ${currentStageIndex + 1} の商談記録を更新しました（全${single.length}件）`);
+ }
+ if (warnings.length) notes.push(`貸借の合計が合っていない問題があります：${warnings.slice(0, 5).join("、")}${warnings.length > 5 ? " ほか" : ""}。AIに作り直してもらうことをおすすめします。`);
+ if (!storageOk()) notes.push("⚠️ このブラウザ（または表示方法）では、取り込んだ内容を端末に保存できませんでした。開いている間は使えますが、ブラウザやアプリを閉じると元に戻ります。閉じたあとは、同じJSONをもう一度貼り付けてください。");
+ document.getElementById("json-input").value = "";
+ customAlert(done.join("。") + "。" + (notes.length ? "\n\n" + notes.join("\n") : ""));
+}
+
+window.addEventListener("DOMContentLoaded", init);
+window.addEventListener("keydown", (e) => {
+  const activeEl = document.activeElement;
+  const isTyping = activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA");
+  const quizArea = document.getElementById("quiz-area");
+  if (!quizArea || quizArea.style.display === "none") return;
+  if (e.key === "ArrowRight") { if (!isTyping || e.altKey || e.ctrlKey) { e.preventDefault(); nextQuestion(); } }
+  else if (e.key === "ArrowLeft") { if (!isTyping || e.altKey || e.ctrlKey) { e.preventDefault(); prevQuestion(); } }
+});
+</script>
+
+
+</body></html>
