@@ -440,9 +440,10 @@
 
  <details>
  <summary>📥 クラスター設定をインポート (JSON)</summary>
- <p class="import-help">AIが作ったJSONを貼り付けてください。テーマ設定、5レベル分の問題、今開いているレベルだけの問題のどれでも取り込めます。テーマと問題が続けて入っていても、そのまま貼れます。</p>
- <textarea id="json-input" placeholder="ここにJSONを貼り付け（テーマ設定 / 5レベル分の問題 / 現在のレベルの問題）"></textarea>
+ <p class="import-help">AIが作ったJSONを貼り付けてください。テーマ設定、5レベル分の問題、今開いているレベルだけの問題のどれでも取り込めます。テーマと問題が続けて入っていても、そのまま貼れます。「バックアップ」ボタンで今の進捗やカスタム内容をまとめたテキストを表示できます。それをコピーして保存しておけば、同じ欄に貼り付けて「パッチを適用」ボタンで復元できます。</p>
+ <textarea id="json-input" placeholder="ここにJSONを貼り付け（テーマ設定 / 5レベル分の問題 / 現在のレベルの問題 / バックアップ）"></textarea>
  <button type="button" class="load-btn" onclick="loadCustomData()">パッチを適用</button>
+ <button type="button" class="load-btn" onclick="exportBackup()">💾 セッションをバックアップ // EXPORT</button>
  <button type="button" class="reset-theme-btn" onclick="resetTheme()">テーマだけ初期値に戻す</button>
  </details>
 
@@ -563,6 +564,9 @@ let correctCount = 0;
 let wrongList = [];
 let answeredSet = new Set();
 let isReviewMode = false;
+let currentStageBaseQuestions = [];
+let currentStageFingerprint = "";
+let stageCleared = false;
 
 // iPhoneのQuick Look等、file://で開いた際にlocalStorageが例外を投げる環境でも
 // アプリ本体が止まらないようにする安全な読み書き関数
@@ -572,7 +576,7 @@ function lsClear() { try { localStorage.clear(); } catch (e) {} }
 
 function init() {
  restoreImported();
- const savedStage = lsGet("boki_cyber_current_stage");
+ const savedStage = lsGet(KEY_CURRENT_STAGE);
  currentStageIndex = savedStage ? parseInt(savedStage, 10) : 0;
  if (currentStageIndex < 0 || currentStageIndex >= STAGES.length) currentStageIndex = 0;
  loadStage(currentStageIndex);
@@ -583,7 +587,7 @@ function switchStage(stageIdx) {
 }
 function loadStage(stageIdx) {
  currentStageIndex = stageIdx;
- lsSet("boki_cyber_current_stage", currentStageIndex);
+ lsSet(KEY_CURRENT_STAGE, currentStageIndex);
  for (let i = 0; i < STAGES.length; i++) {
  const btn = document.getElementById(`tab-${i}`);
  if (btn) { if (i === stageIdx) btn.classList.add("active"); else btn.classList.remove("active"); }
@@ -591,17 +595,44 @@ function loadStage(stageIdx) {
  const stageObj = STAGES[stageIdx];
  document.getElementById("stage-badge-text").textContent = `LEVEL ${stageIdx + 1}`;
  document.getElementById("sub-title").textContent = `〜 ${stageObj.title} 〜`;
- const keyPrefix = `boki_cyber_st${stageIdx}_`;
+ const keyPrefix = `${APP_PREFIX}st${stageIdx}_`;
  let stageData = stageObj.questions;
  try {
  const customData = lsGet(`${keyPrefix}data`);
  if (customData) { const parsed = JSON.parse(customData); if (Array.isArray(parsed) && parsed.length > 0) stageData = parsed; }
  } catch(e) {}
+
+ // 問題データが変わっていないかをフィンガープリントで確認し、変わっていなければ保存済みの進捗（何問目まで・正解数・見直しリスト）を復元する。
+ // 新しい問題やテーマが取り込まれてフィンガープリントが変わった場合は、古い進捗は使わず1問目から安全に開始する。
+ currentStageBaseQuestions = stageData;
+ currentStageFingerprint = stageFingerprint(stageData);
+ const prog = loadProgressFor(stageIdx, stageData);
+
+ isReviewMode = false;
+ if (prog) {
+ const wrongQuestions = (prog.wrongStageIdx || []).map(i => stageData[i]).filter(Boolean);
+ if (prog.isReviewMode && wrongQuestions.length > 0) {
+ isReviewMode = true;
+ currentQuestions = [...wrongQuestions];
+ } else {
  currentQuestions = [...stageData];
- currentIndex = 0; correctCount = 0; wrongList = []; isReviewMode = false; answeredSet.clear();
+ }
+ wrongList = wrongQuestions;
+ correctCount = Math.min(Math.max(prog.correctCount || 0, 0), currentQuestions.length);
+ answeredSet = new Set((prog.answeredIdx || []).filter(i => i >= 0 && i < currentQuestions.length));
+ currentIndex = Math.min(Math.max(prog.currentIndex || 0, 0), currentQuestions.length - 1);
+ } else {
+ currentQuestions = [...stageData];
+ currentIndex = 0; correctCount = 0; wrongList = []; answeredSet = new Set();
+ }
+
  document.getElementById("quiz-area").style.display = "block";
  document.getElementById("clear-area").style.display = "none";
- loadQuestion(0);
+ if (prog && prog.cleared && !isReviewMode) {
+ showClearScreen();
+ } else {
+ loadQuestion(currentIndex);
+ }
 }
 function createRowHTML(account = "", amount = "") {
  const div = document.createElement("div");
@@ -637,6 +668,8 @@ function loadQuestion(index) {
  document.getElementById("progress-fill").style.width = percent + "%";
  document.getElementById("progress-text").textContent = `PACKET ${index + 1} / ${currentQuestions.length} (${percent}%)`;
  setTimeout(() => { const firstInput = document.querySelector("#debit-rows input[type='text']"); if (firstInput) firstInput.focus(); }, 50);
+ stageCleared = false;
+ saveProgress();
 }
 function getEntries(side) {
  const container = document.getElementById(`${side}-rows`);
@@ -694,10 +727,13 @@ function checkAnswer() {
  res.innerHTML = `<strong>ACCESS DENIED // 防壁に検知されました</strong><br>正規プロトコル [借方]: ${dStr}<br>正規プロトコル [貸方]: ${cStr}<br><br>【解説】${escapeHtml(q.explanation)}`;
  if (!answeredSet.has(currentIndex)) { if (!wrongList.some(item => item.story === q.story)) wrongList.push(q); answeredSet.add(currentIndex); }
  }
+ saveProgress();
 }
 function prevQuestion() { if (currentIndex > 0) loadQuestion(currentIndex - 1); }
 function nextQuestion() { if (currentIndex < currentQuestions.length - 1) loadQuestion(currentIndex + 1); else showClearScreen(); }
 function showClearScreen() {
+ stageCleared = true;
+ saveProgress();
  document.getElementById("quiz-area").style.display = "none";
  const clearArea = document.getElementById("clear-area");
  clearArea.style.display = "block";
@@ -722,19 +758,92 @@ function showClearScreen() {
  revArea.appendChild(btn);
  }
 }
-function startFreshStage() { loadStage(currentStageIndex); }
+function startFreshStage() { clearProgress(currentStageIndex); loadStage(currentStageIndex); }
 function forceReset() {
  customConfirm("⚠️ システムを工場出荷状態（初期データ）にロールバックしますか？", () => { lsClear(); location.reload(); });
 }
 // ===== 取り込み機能（テーマ / 全ステージ / 現在の章） =====
+const APP_PREFIX = "boki_cyber_";
 const KEY_THEME = "boki_cyber_theme";
 const KEY_STAGES = "boki_cyber_stages";
+const KEY_CURRENT_STAGE = "boki_cyber_current_stage";
 const DEFAULT_TAB_LABELS = ["白の防壁", "境界線侵入", "闇市プロトコル", "組織シンジケート", "深層の玉座"];
 const customTitleIdx = new Set();
 const themeProps = new Set();
 let DEFAULT_LOOK = null;
 
 function lsRemove(key) { try { localStorage.removeItem(key); } catch (e) {} }
+
+// ---- レベルごとの進捗（何問目まで進んだか）の保存・復元 ----
+// 問題データの内容から短い指紋（フィンガープリント）を作り、後で問題が入れ替わっていないかの判定に使う。
+function hashStr(s) {
+ let h = 5381;
+ for (let i = 0; i < s.length; i++) { h = ((h << 5) + h) + s.charCodeAt(i); h = h & h; }
+ return (h >>> 0).toString(36);
+}
+function stageFingerprint(stageData) {
+ try { return stageData.length + ":" + hashStr(JSON.stringify(stageData.map(q => [q.story, q.debit, q.credit]))); }
+ catch (e) { return String(stageData.length); }
+}
+function progressKey(stageIdx) { return `${APP_PREFIX}st${stageIdx}_progress`; }
+function clearProgress(stageIdx) { lsRemove(progressKey(stageIdx)); }
+function saveProgress() {
+ try {
+ const wrongStageIdx = wrongList.map(q => currentStageBaseQuestions.indexOf(q)).filter(i => i >= 0);
+ const data = {
+ fingerprint: currentStageFingerprint,
+ isReviewMode: isReviewMode,
+ cleared: stageCleared,
+ currentIndex: currentIndex,
+ correctCount: correctCount,
+ answeredIdx: Array.from(answeredSet),
+ wrongStageIdx: wrongStageIdx
+ };
+ lsSet(progressKey(currentStageIndex), JSON.stringify(data));
+ } catch (e) {}
+}
+function loadProgressFor(stageIdx, stageData) {
+ try {
+ const raw = lsGet(progressKey(stageIdx));
+ if (!raw) return null;
+ const data = JSON.parse(raw);
+ if (!data || data.fingerprint !== stageFingerprint(stageData)) return null;
+ return data;
+ } catch (e) { return null; }
+}
+
+// ---- バックアップ（進捗・カスタム問題・テーマをまとめて書き出し／復元） ----
+function collectBackupData() {
+ const data = { __appBackup: 1, app: APP_PREFIX, exportedAt: Date.now(), currentStage: currentStageIndex, stageOverrides: {}, progress: {} };
+ try { const theme = lsGet(KEY_THEME); if (theme) data.theme = JSON.parse(theme); } catch (e) {}
+ try { const stages = lsGet(KEY_STAGES); if (stages) data.stages = JSON.parse(stages); } catch (e) {}
+ for (let i = 0; i < STAGES.length; i++) {
+ try { const single = lsGet(`${APP_PREFIX}st${i}_data`); if (single) data.stageOverrides[i] = JSON.parse(single); } catch (e) {}
+ try { const prog = lsGet(progressKey(i)); if (prog) data.progress[i] = JSON.parse(prog); } catch (e) {}
+ }
+ return data;
+}
+function exportBackup() {
+ const json = JSON.stringify(collectBackupData(), null, 2);
+ const textarea = document.getElementById("json-input");
+ if (textarea) textarea.value = json;
+ let copied = false;
+ try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(json); copied = true; } } catch (e) {}
+ customAlert(
+ (copied ? "バックアップデータをクリップボードにコピーしました。\n" : "バックアップデータを下の欄に表示しました。全て選択してコピーしてください。\n") +
+ "このテキストをメモ帳などに保存しておくと安心です。\n復元するときは、このテキストを同じ欄に貼り付けて「パッチを適用」ボタンを押してください。"
+ );
+}
+function restoreBackup(data) {
+ try {
+ if (data.theme) lsSet(KEY_THEME, JSON.stringify(data.theme));
+ if (data.stages) lsSet(KEY_STAGES, JSON.stringify(data.stages));
+ if (data.stageOverrides) Object.keys(data.stageOverrides).forEach(i => lsSet(`${APP_PREFIX}st${i}_data`, JSON.stringify(data.stageOverrides[i])));
+ if (data.progress) Object.keys(data.progress).forEach(i => lsSet(progressKey(Number(i)), JSON.stringify(data.progress[i])));
+ if (typeof data.currentStage === "number") lsSet(KEY_CURRENT_STAGE, data.currentStage);
+ return true;
+ } catch (e) { return false; }
+}
 
 function escapeHtml(value) {
  return String(value == null ? "" : value)
@@ -988,6 +1097,15 @@ function loadCustomData() {
  let blocks;
  try { blocks = parseJsonBlocks(raw); } catch (e) { customAlert("⚠️ " + e.message); return; }
  if (blocks.length === 0) { customAlert("⚠️ JSONが見つかりません。{ から } まで、または [ から ] までを貼り付けてください。"); return; }
+
+ const backupBlock = blocks.find(b => b && typeof b === "object" && !Array.isArray(b) && b.__appBackup === 1);
+ if (backupBlock) {
+ const ok = restoreBackup(backupBlock);
+ document.getElementById("json-input").value = "";
+ if (ok) showModal("バックアップから復元しました。OKを押すとページを再読み込みします。", { showCancel: false, onOk: () => location.reload() });
+ else customAlert("⚠️ バックアップの復元に失敗しました。データが壊れているかもしれません。");
+ return;
+ }
 
  let theme = null, stages = null, single = null;
  const warnings = [];
